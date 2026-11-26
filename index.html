@@ -1,0 +1,778 @@
+<title>Processo de Revenda LDP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: coluna única de leitura (~960px), resumo → tabela → regras → modelos → fluxo → pendências */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --ink: #1b2433;
+  --muted: #5b6577;
+  --line: #dde1e8;
+  --accent: #1f3a5f;      /* azul-marinho Kempinski */
+  --accent-soft: #e6ecf4;
+  --stone: #8a7a63;       /* pedra/bronze, uso pontual */
+  --ok: #1f7a4d; --ok-soft: #e3f3ea;
+  --warn: #9a6200; --warn-soft: #fbf0dc;
+  --crit: #a33a2c; --crit-soft: #f8e5e2;
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+/* tema único claro: a página fica sempre nessas cores, mesmo com o navegador em modo escuro */
+:root, :root[data-theme="dark"] { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 48px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.35rem; font-weight: 600; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--stone); font-weight: 600; }
+.lede { color: var(--muted); font-size: 1.02rem; }
+section { display: grid; gap: 16px; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+header { display: grid; gap: 12px; border-bottom: 2px solid var(--accent); padding-bottom: 24px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); font-size: 0.85rem; }
+
+.figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; display: grid; gap: 4px; }
+.fig .v { font-family: var(--f-display); font-size: 1.7rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.fig .l { color: var(--muted); font-size: 0.85rem; }
+@media (max-width: 640px) { .figures { grid-template-columns: 1fr; } }
+
+.tbl-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; min-width: 820px; font-size: 0.88rem; }
+table.lev { min-width: 0; font-size: 0.8rem; table-layout: fixed; }
+table.lev th, table.lev td { padding: 9px 8px; }
+table.lev th { font-size: 0.66rem; letter-spacing: 0.04em; }
+table.lev .chip { white-space: normal; }
+@media (max-width: 760px) { table.lev { min-width: 820px; } }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--accent-soft); }
+tr:last-child td { border-bottom: 0; }
+td.r, th.r { text-align: right; }
+.ct { font-family: var(--f-mono); font-weight: 500; white-space: nowrap; font-size: 0.95em; }
+table.lev .num { white-space: normal; }
+.sub { color: var(--muted); font-size: 0.8rem; display: block; }
+tfoot td { font-weight: 600; background: var(--accent-soft); }
+
+.chip { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.a { background: var(--accent-soft); color: var(--accent); }
+.chip.b { background: var(--ok-soft); color: var(--ok); }
+.chip.d { background: var(--warn-soft); color: var(--warn); }
+
+.rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.rule { padding: 16px 18px; display: grid; gap: 4px; border-bottom: 1px solid var(--line); min-width: 0; }
+.rule:nth-child(odd) { border-right: 1px solid var(--line); }
+.rule:nth-last-child(-n+2) { border-bottom: 0; }
+.rule b { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); }
+@media (max-width: 640px) {
+  .rules { grid-template-columns: 1fr; }
+  .rule:nth-child(odd) { border-right: 0; }
+  .rule:nth-last-child(2) { border-bottom: 1px solid var(--line); }
+}
+
+.models { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.model { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.model ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 0.9rem; }
+.model .who { font-size: 0.8rem; color: var(--muted); }
+.formula { font-family: var(--f-mono); font-size: 0.78rem; background: var(--bg); border: 1px dashed var(--line); border-radius: 6px; padding: 8px 10px; }
+@media (max-width: 800px) { .models { grid-template-columns: 1fr; } }
+
+.flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: step; }
+.flow li { counter-increment: step; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; padding-bottom: 18px; position: relative; }
+.flow li::before {
+  content: counter(step); width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent); color: var(--surface); font-family: var(--f-display); font-weight: 600;
+  display: grid; place-items: center; font-size: 0.9rem; position: relative; z-index: 1;
+}
+.flow li:not(:last-child)::after { content: ""; position: absolute; left: 15px; top: 32px; bottom: 0; width: 2px; background: var(--line); }
+.flow .step { display: grid; gap: 2px; padding-top: 4px; }
+.flow .owner { font-size: 0.78rem; color: var(--stone); font-weight: 600; }
+.flow .split { font-size: 0.88rem; color: var(--muted); }
+
+.issues { display: grid; gap: 10px; }
+.issue { display: grid; grid-template-columns: 6px minmax(0, 1fr); gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px 14px 0; overflow: hidden; }
+.issue::before { content: ""; background: var(--warn); border-radius: 0 3px 3px 0; }
+.issue.crit::before { background: var(--crit); }
+.issue div { display: grid; gap: 2px; }
+.issue p { color: var(--muted); font-size: 0.9rem; }
+
+.sources { font-size: 0.85rem; color: var(--muted); display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 20px; }
+.sources code { font-family: var(--f-mono); font-size: 0.8rem; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* abas */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-top: -24px; }
+.tabs a { padding: 10px 16px; text-decoration: none; color: var(--muted); font-weight: 600; font-size: 0.92rem; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.tabs a[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); }
+.view { display: grid; gap: 48px; }
+
+/* simulador */
+.sim-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.params { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+.pcol { display: grid; gap: 14px; align-content: start; min-width: 0; }
+@media (max-width: 760px) { .params { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.panel h3 { font-size: 0.95rem; }
+.field { display: grid; gap: 4px; }
+.field label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.field input, .field select, .flow-tbl input, .flow-tbl select {
+  font: inherit; font-size: 0.9rem; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; width: 100%; min-width: 0;
+}
+.field input.num, .flow-tbl input.num { text-align: right; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.facts { display: grid; gap: 6px; font-size: 0.86rem; background: var(--accent-soft); border-radius: 6px; padding: 12px; }
+.facts div { display: flex; justify-content: space-between; gap: 12px; }
+.facts span:first-child { color: var(--muted); }
+.rule-note { font-size: 0.82rem; color: var(--muted); border-left: 3px solid var(--stone); padding-left: 10px; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-size: 0.86rem; }
+.check input { margin-top: 3px; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { font: inherit; font-size: 0.82rem; font-weight: 600; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--accent); background: var(--surface); color: var(--accent); cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--surface); }
+.btn.ghost { border-color: var(--line); color: var(--muted); }
+.flow-wrap { overflow-x: auto; }
+.flow-tbl { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.86rem; table-layout: fixed; }
+.flow-tbl th.r { text-align: right; }
+.flow-tbl th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); text-align: left; padding: 4px 6px; font-weight: 600; }
+.flow-tbl td { padding: 4px 6px; vertical-align: middle; }
+.flow-tbl td.tot { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.flow-tbl tfoot td { font-weight: 600; border-top: 1px solid var(--line); padding-top: 8px; }
+.x { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 4px; }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 820px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .kpis { grid-template-columns: minmax(0, 1fr); } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.kpi .v { font-family: var(--f-display); font-size: 1.2rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi .l { font-size: 0.78rem; color: var(--muted); }
+.kpi.hl { border-color: var(--accent); background: var(--accent-soft); }
+.alerts { display: grid; gap: 8px; }
+.alert { font-size: 0.86rem; padding: 10px 12px; border-radius: 6px; background: var(--warn-soft); color: var(--ink); border-left: 4px solid var(--warn); }
+.alert.crit { background: var(--crit-soft); border-left-color: var(--crit); }
+.alert.ok { background: var(--ok-soft); border-left-color: var(--ok); }
+.split-bar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; background: var(--line); }
+.split-bar span { display: block; height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.8rem; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.devol { border-color: var(--accent); }
+.devol p { max-width: none; }
+.devol-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.devol-grid > div { background: var(--surface); padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
+.devol-grid .l { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+.devol-grid .v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) { .devol-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.chip.c { background: var(--crit-soft); color: var(--crit); }
+.cron-wrap { max-height: 560px; overflow: auto; }
+.cron { min-width: 0; font-size: 0.82rem; }
+.cron td, .cron th { padding: 7px 8px; }
+.cron thead th { position: sticky; top: 0; z-index: 1; }
+.cron .sub { white-space: normal; }
+@media (max-width: 760px) { .cron { min-width: 700px; } }
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">LDP Canela · Pós-vendas</span>
+  <h1>Processo de Revenda</h1>
+  <p class="lede">Contratos com a TAG REVENDA no TSE: quanto cada cliente pagou, quanto vai receber de volta segundo o aditamento assinado no DocuSign, e como funciona o processo do pedido de saída até a devolução.</p>
+  <div class="meta">
+    <span id="lev-data">Levantamento de 26/11/2026</span>
+    <span>Fontes: TSE (relatório 12 e financeiro por contrato) · DocuSign (aditamentos)</span>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Seções">
+  <a href="#levantamento" data-view="levantamento">Levantamento</a>
+  <a href="#simulador" data-view="simulador">Simulador de venda</a>
+  <a href="#guia" data-view="guia">Guia do corretor</a>
+</nav>
+
+<div class="view" id="view-guia" hidden>
+  <section>
+    <h2>Revenda: guia do corretor</h2>
+    <p class="lede">Revenda é a venda de uma fração que já teve dono: o cliente anterior desistiu e a LDP devolve o que ele pagou com o dinheiro da nova venda. Por isso toda proposta de revenda passa pela gerência antes de ir ao cliente.</p>
+  </section>
+  <section>
+    <h2>Passo a passo</h2>
+    <ol class="flow">
+      <li><div class="step"><span class="owner">Corretor</span><h3>Confira se a fração é revenda</h3><p class="split">Pergunte à gerência antes de ofertar.</p></div></li>
+      <li><div class="step"><span class="owner">Corretor + gerência</span><h3>Monte a proposta com a gerência</h3><p class="split">Antes de passar ao cliente.</p></div></li>
+      <li><div class="step"><span class="owner">Corretor</span><h3>Apresente ao cliente a proposta aprovada</h3><p class="split">Se ele pedir mudança de preço, sinal ou prazo, volte à gerência antes de confirmar.</p></div></li>
+      <li><div class="step"><span class="owner">Corretor</span><h3>Crie o simulador junto com a proposta fechada</h3><p class="split">E envie ao ADM.</p></div></li>
+      <li><div class="step"><span class="owner">ADM</span><h3>Passe o fechamento ao ADM</h3><p class="split">O ADM lança a venda e o contrato segue o fluxo normal de venda, já existente.</p></div></li>
+    </ol>
+  </section>
+  <section>
+    <h2>Comissão</h2>
+    <div class="rules">
+      <div class="rule"><b>Percentual</b><p>A comissão vigente do mês.</p></div>
+      <div class="rule"><b>Registro</b><p>No Quadro de comissões: percentual, base de cálculo, quem recebe e valor. O cliente anterior tem direito a essa informação.</p></div>
+      <div class="rule"><b>Quando recebe</b><p>Depende da fração: em algumas sai do sinal, em outras só depois da devolução ao cliente anterior. A gerência informa ao aprovar a proposta.</p></div>
+      <div class="rule"><b>Indicação do cliente anterior</b><p>Se o comprador for indicado pelo próprio cliente anterior, pode não haver comissão. Confirme com a gerência.</p></div>
+    </div>
+  </section>
+  <section>
+    <h2>O que não fazer</h2>
+    <div class="issues">
+      <div class="issue crit"><div><h3>Contar ao comprador da fração</h3><p>Quem era o dono ou quanto ele pagou.</p></div></div>
+      <div class="issue crit"><div><h3>Fechar fora da tabela sem aprovação</h3><p>Abaixo da tabela, ou com mudança de sinal e parcelamento, só com aprovação da gerência.</p></div></div>
+      <div class="issue"><div><h3>Prometer prazo diferente</h3><p>Prazo de uso ou de entrega diferente do contrato padrão.</p></div></div>
+      <div class="issue"><div><h3>Falar direto com o cliente anterior</h3><p>Esse contato é do Relacionamento.</p></div></div>
+    </div>
+  </section>
+</div>
+
+<div class="view" id="view-simulador" hidden>
+  <section>
+    <h2>Simulador de venda por contrato</h2>
+    <p class="lede">Simula a nova venda da fração e aplica a ordem de pagamento do aditamento de cada cliente: quanto ele recebe, quando o crédito fica quitado e quanto sobra para a LDP. O valor presente segue o simulador comercial (Simulador_Novembro 18.11.2026): 12% a.a. e IGP-M de 5,24% a.a. depois das chaves (maio/2029).</p>
+  </section>
+
+  <div class="sim-grid">
+    <div class="panel params">
+     <div class="pcol">
+      <div class="field">
+        <label for="s-contrato">Contrato em revenda</label>
+        <select id="s-contrato"></select>
+      </div>
+      <div class="facts" id="s-facts"></div>
+      <p class="rule-note" id="s-rule"></p>
+     </div>
+     <div class="pcol">
+      <h3>Crédito do cliente</h3>
+      <div class="field">
+        <label for="s-credito">Crédito na data-base (R$)</label>
+        <input id="s-credito" class="num" inputmode="decimal">
+      </div>
+      <div class="row2">
+        <div class="field"><label for="s-base">Data-base</label><input id="s-base" type="date"></div>
+        <div class="field"><label for="s-ipca">IPCA projetado % a.a.</label><input id="s-ipca" class="num" inputmode="decimal" value="4,5"></div>
+      </div>
+      <h3>Nova venda</h3>
+      <div class="row2">
+        <div class="field"><label for="s-data">Data da venda</label><input id="s-data" type="date"></div>
+        <div class="field"><label for="s-com">Comissão %</label><input id="s-com" class="num" inputmode="decimal" value="6"></div>
+      </div>
+      <div class="field"><label for="s-prazo">Prazo-limite para quitar o crédito</label><input id="s-prazo" type="date"></div>
+      <label class="check"><input type="checkbox" id="s-prazo-on"><span>No prazo-limite, a LDP paga o saldo do crédito com recursos próprios (em 30 dias)</span></label>
+     </div>
+    </div>
+
+    <div style="display:grid;gap:16px;min-width:0">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+          <h3>Proposta do novo comprador</h3>
+          <div class="btns">
+            <button class="btn" type="button" id="b-tabela">Fluxo da tabela</button>
+            <button class="btn" type="button" id="b-vista">À vista</button>
+            <button class="btn ghost" type="button" id="b-add">+ Linha</button>
+          </div>
+        </div>
+        <div class="flow-wrap">
+          <table class="flow-tbl">
+            <colgroup><col style="width:72px"><col style="width:150px"><col style="width:160px"><col style="width:170px"><col><col style="width:36px"></colgroup>
+            <thead><tr><th>Parc.</th><th>Periodicidade</th><th>Data inicial</th><th class="r">Valor da parcela</th><th class="r">Total</th><th></th></tr></thead>
+            <tbody id="s-rows"></tbody>
+            <tfoot><tr><td colspan="4">Preço da nova venda</td><td class="tot" id="s-preco">–</td><td></td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel devol">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+          <h3>Como é a devolução ao cliente</h3>
+          <span class="chip" id="s-devol-chip"></span>
+        </div>
+        <p id="s-devol-txt"></p>
+        <div class="devol-grid" id="s-devol-grid"></div>
+        <p class="rule-note" id="s-devol-cl"></p>
+      </div>
+
+      <div class="alerts" id="s-alerts"></div>
+
+      <div class="kpis">
+        <div class="kpi hl"><span class="l">Cliente recebe no total</span><span class="v num" id="k-cliente">–</span></div>
+        <div class="kpi"><span class="l">Crédito quitado em</span><span class="v" id="k-quit">–</span></div>
+        <div class="kpi"><span class="l">LDP fica com (líquido)</span><span class="v num" id="k-ldp">–</span></div>
+        <div class="kpi"><span class="l">V.P. proposta × tabela</span><span class="v num" id="k-vp">–</span></div>
+      </div>
+
+      <div class="panel">
+        <h3>Para onde vai o dinheiro da nova venda</h3>
+        <div class="split-bar" id="s-bar"></div>
+        <div class="legend" id="s-legend"></div>
+        <div class="facts" id="s-detail"></div>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Cronograma de repasses</h2>
+    <p class="lede">Cada recebimento do novo comprador e o repasse ao cliente até 30 dias depois. O saldo do crédito é corrigido pelo IPCA até a data de cada repasse.</p>
+    <div class="tbl-wrap cron-wrap">
+      <table class="cron">
+        <thead><tr><th>Recebido em</th><th class="r">Valor</th><th class="r">Comissão</th><th>Repasse até</th><th class="r">Crédito pago</th><th class="r">50% cliente</th><th class="r">LDP</th><th class="r">Saldo crédito</th></tr></thead>
+        <tbody id="s-cron"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="view" id="view-levantamento">
+
+<section aria-labelledby="s-resumo">
+  <h2 id="s-resumo">Resumo</h2>
+  <div class="figures" id="lev-figs"></div>
+</section>
+
+<section aria-labelledby="s-contratos">
+  <h2 id="s-contratos">Valor pago e valor a receber</h2>
+  <p class="lede">O crédito é o que o cliente pagou, sem multas e juros de atraso, corrigido pelo INCC-M até a data-base do aditamento. Depois dessa data, é corrigido pelo IPCA até ser devolvido.</p>
+  <div class="tbl-wrap">
+    <table class="lev">
+      <colgroup><col style="width:10%"><col style="width:15%"><col style="width:11%"><col style="width:13%"><col style="width:10%"><col style="width:10%"><col style="width:15%"><col style="width:16%"></colgroup>
+      <thead>
+        <tr>
+          <th>Contrato</th>
+          <th id="lev-col-cli">Cliente</th>
+          <th class="r">Pago (TSE)</th>
+          <th class="r">Crédito no aditamento</th>
+          <th>Data-base</th>
+          <th>Modelo</th>
+          <th>Como devolve</th>
+          <th>Se não vender</th>
+        </tr>
+      </thead>
+      <tbody id="lev-body"></tbody>
+      <tfoot id="lev-foot"></tfoot>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="s-regras">
+  <h2 id="s-regras">Como o cliente recebe</h2>
+  <p class="lede">Regras que se repetem em todos os aditamentos.</p>
+  <div class="rules">
+    <div class="rule"><b>Cobrança</b><p>As parcelas que faltavam deixam de ser cobradas na assinatura. Não voltam a valer se a revenda demorar.</p></div>
+    <div class="rule"><b>Quando</b><p>Só depois da nova venda. No B-226 e no B-205, o crédito inteiro sai em até 30 dias do primeiro pagamento do comprador. Nos demais, em até 30 dias de cada recebimento.</p></div>
+    <div class="rule"><b>Venda parcelada</b><p>B-215, B-209, A-105 e A-203: o cliente recebe aos poucos, conforme o comprador paga. B-226 e B-205: não parcela; a LDP completa com caixa próprio o que faltar. Em nenhum caso dá para segurar o valor até o prazo-limite.</p></div>
+    <div class="rule"><b>Forma</b><p>Transferência para uma conta do cliente, indicada por escrito. A quitação só vale com o dinheiro disponível.</p></div>
+    <div class="rule"><b>Correção</b><p>INCC-M até a data-base (com defasagem de um mês nos modelos mais novos), IPCA depois.</p></div>
+    <div class="rule"><b>Atraso da LDP</b><p>IPCA, juros de 1% ao mês e multa de 2% sobre o valor vencido.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="s-modelos">
+  <h2 id="s-modelos">Modelos de aditamento</h2>
+  <p class="lede">Cada aditamento foi redigido de um jeito. Na prática, eles se agrupam em três regras de devolução.</p>
+  <div class="models">
+    <article class="model">
+      <span class="chip a" style="justify-self:start">Só crédito</span>
+      <h3>Devolve o valor pago corrigido</h3>
+      <span class="who" data-modelo="credito"></span>
+      <ul>
+        <li>O cliente recebe o crédito e nada mais.</li>
+        <li>Pago de uma vez, em até 30 dias do primeiro pagamento do comprador, mesmo com venda parcelada. A LDP completa a diferença com caixa próprio.</li>
+        <li>Comissão e despesas da nova venda não são descontadas do crédito.</li>
+        <li>Sem venda até o Habite-se: distrato e devolução integral em 30 dias.</li>
+      </ul>
+    </article>
+    <article class="model">
+      <span class="chip b" style="justify-self:start">Crédito + 50%</span>
+      <h3>Devolve o crédito e divide o lucro</h3>
+      <span class="who" data-modelo="meio"></span>
+      <div class="formula">Resultado = preço da nova venda − comissão − crédito atualizado</div>
+      <ul>
+        <li>Ordem do dinheiro: comissão, crédito do cliente, depois o resultado dividido 50/50.</li>
+        <li>A LDP só recebe sua parte depois de devolver todo o crédito.</li>
+        <li>Venda que não cubra o crédito precisa de aceite do cliente ou a LDP completa a diferença.</li>
+        <li>A-105: comissão de no máximo 6%, e o cliente pode indicar um comprador sem comissão.</li>
+      </ul>
+    </article>
+    <article class="model">
+      <span class="chip d" style="justify-self:start">Prazo fixo</span>
+      <h3>Crédito com data-limite</h3>
+      <span class="who" data-modelo="prazo"></span>
+      <ul>
+        <li>Sem divisão de lucro: o que passar do crédito fica com a LDP.</li>
+        <li>Comissão de 6% paga pela LDP, sem desconto no crédito.</li>
+        <li>Se não vender até 31/12/2027, a LDP paga o saldo com recursos próprios em 30 dias, com ou sem Habite-se.</li>
+        <li>Tem cláusula de confidencialidade.</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<section aria-labelledby="s-fluxo">
+  <h2 id="s-fluxo">Fluxo atual</h2>
+  <p class="lede">Do pedido de saída até a devolução, como aparece nos documentos e no TSE.</p>
+  <ol class="flow">
+    <li><div class="step"><span class="owner">Cliente → Relacionamento</span><h3>Cliente pede para sair do contrato</h3><p class="split">Em vez do distrato com multa, o Relacionamento oferece a revenda da fração.</p></div></li>
+    <li><div class="step"><span class="owner">Relacionamento</span><h3>Cálculo do crédito</h3><p class="split">Histórico financeiro do TSE: soma do pago, sem encargos de atraso, corrigido pelo INCC-M até a data-base.</p></div></li>
+    <li><div class="step"><span class="owner">Relacionamento · Jurídico</span><h3>Redação do aditamento</h3><p class="split">Novo prazo de obra (dezembro de 2027), autorização para comercializar, crédito, regra de devolução e o que acontece se não vender.</p></div></li>
+    <li><div class="step"><span class="owner">DocuSign</span><h3>Assinaturas</h3><p class="split">Relacionamento, Stonecliff, Jurídico, Área de Pessoas e os clientes.</p></div></li>
+    <li><div class="step"><span class="owner">TSE</span><h3>Marcação no sistema</h3><p class="split">TAG REVENDA, cobrança suspensa (bloqueio de boleto) e status do contrato alterado.</p></div></li>
+    <li><div class="step"><span class="owner">Comercial</span><h3>Fração volta ao estoque e é vendida</h3><p class="split">O cliente assina os documentos da nova venda em até 5 dias úteis.</p></div></li>
+    <li><div class="step"><span class="owner">Financeiro</span><h3>Repasses a cada recebimento</h3><p class="split">Comissão, crédito do cliente (até 30 dias) e, quando for o caso, divisão do lucro.</p></div></li>
+    <li><div class="step"><span class="owner">Jurídico</span><h3>Encerramento</h3><p class="split">Com o crédito devolvido, extinguem-se os direitos do cliente. Sem venda no prazo, vale o distrato ou o pagamento com recursos da LDP.</p></div></li>
+  </ol>
+</section>
+
+<section aria-labelledby="s-atencao">
+  <h2 id="s-atencao">Pontos de atenção</h2>
+  <div class="issues" id="lev-pontos"></div>
+</section>
+
+<footer class="sources">
+  <span><b>Como foi levantado.</b> TSE Web: relatório 12, filtrando "REVENDA" nos campos <code>tag</code> e <code>descricaotag</code>; valor pago = soma do valor líquido das parcelas pagas no financeiro de cada contrato. DocuSign: aditamentos de set. a nov./2026 enviados pelo Relacionamento, lidos página a página.</span>
+  <span>Não conferido: valor corrigido do B-205-0159 (tabela do Anexo I) e cláusulas de prazo do A-105-0487.</span>
+</footer>
+
+</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  // ---------- dados dos contratos (TSE + aditamentos DocuSign) ----------
+  // ordem: sequência de destinos de cada recebimento; "com" = comissão, "cred" = crédito do cliente.
+  // sobra: "meio" = 50/50 cliente/LDP, "ldp" = tudo LDP.
+  var DADOS = /*__DADOS__*/{"atualizado": "2026-11-26", "contratos": [{"id": "B-226-0355", "idContrato": 357, "status": "conferido", "ativo": true, "fracao": "B226 · fração 6 · 6 semanas", "area": 54.0, "tabela": 510500.0, "pago": 238304.56, "pagoObs": "", "credito": 238304.56, "creditoObs": "", "creditoNoTotal": true, "base": "2026-09-29", "modelo": "credito", "devolveTxt": "<b>De uma vez<\/b>, em até 30 dias do 1º pagamento do comprador", "senaoVenderTxt": "Distrato no Habite-se, devolução em 30 dias", "ordem": ["com", "cred"], "sobra": "ldp", "comDeduz": true, "prazo": "2027-12-31", "prazoOn": false, "devolucao": "integral30", "regra": "Só crédito, pago de uma vez. Recebido o primeiro pagamento da nova venda, a LDP paga a comissão e devolve o crédito inteiro em até 30 dias, mesmo que o comprador pague parcelado (cl. 3.3). O que sobrar fica com a LDP. Sem venda até o Habite-se: distrato e devolução em 30 dias (cl. 4.3).", "tseStatus": "CANCELADO", "tag": "BLOQUEIO BOLETO, CANCEL JURIDICO, CARTEIRA BARU , REVENDA"}, {"id": "B-215-0365", "idContrato": 367, "status": "conferido", "ativo": true, "fracao": "B215 · fração 2 · 6 semanas", "area": 54.0, "tabela": 510500.0, "pago": 298000.0, "pagoObs": "quitado", "credito": 359782.9, "creditoObs": "", "creditoNoTotal": true, "base": "2026-10-11", "modelo": "meio", "devolveTxt": "Parcelada, em até 30 dias de cada recebimento", "senaoVenderTxt": "Cliente escolhe ficar ou distratar em 30 dias (sem resposta, fica)", "ordem": ["com", "cred"], "sobra": "meio", "comDeduz": true, "prazo": "2027-12-31", "prazoOn": false, "devolucao": "progressivo", "regra": "Crédito + 50%. Ordem: comissão, crédito, depois o resultado dividido 50/50 (cl. 3.4). Sem venda até o Habite-se, o cliente escolhe ficar com a fração ou fazer o distrato (cl. 4.3).", "tseStatus": "CANCELADO", "tag": "CANCEL JURIDICO, REVENDA"}, {"id": "B-205-0159", "idContrato": 160, "status": "conferido", "ativo": true, "fracao": "B205 · fração 1 · 13 semanas", "area": 52.0, "tabela": 1065000.0, "pago": 430915.68, "pagoObs": "", "credito": 431256.67, "creditoObs": "nominal + parc. 46, corrigir pelo Anexo I", "creditoNoTotal": false, "base": "2026-09-30", "modelo": "credito", "devolveTxt": "<b>De uma vez<\/b>, em até 30 dias do 1º pagamento do comprador", "senaoVenderTxt": "Distrato no Habite-se, devolução em 30 dias", "ordem": ["com", "cred"], "sobra": "ldp", "comDeduz": true, "prazo": "2027-12-31", "prazoOn": false, "devolucao": "integral30", "aviso": "Crédito nominal (R$ 422.873,00 + parcela 46). O valor corrigido pelo INCC está no Anexo I e não foi conferido: ajuste no campo.", "regra": "Só crédito, pago de uma vez. Recebido o primeiro pagamento da nova venda, a LDP paga a comissão e devolve o crédito inteiro em até 30 dias, sem se limitar ao que o comprador já pagou (cl. 3.3). Sobra fica com a LDP. Sem venda até o Habite-se: distrato e devolução em 30 dias (cl. 4.3).", "tseStatus": "CANCELADO", "tag": "BLOQUEIO BOLETO, CARTEIRA BMP, REVENDA"}, {"id": "B-209-0342", "idContrato": 344, "status": "conferido", "ativo": true, "fracao": "B209 · fração 1 · 6 semanas", "area": 53.0, "tabela": 501000.0, "pago": 158484.42, "pagoObs": "inclui 1.283,61 de encargos", "credito": 182356.47, "creditoObs": "preliminar", "creditoNoTotal": true, "base": "2026-11-13", "modelo": "meio", "devolveTxt": "Parcelada, em até 30 dias de cada recebimento", "senaoVenderTxt": "Opção de distrato (cláusula 4.3)", "ordem": ["com", "cred"], "sobra": "meio", "comDeduz": true, "prazo": "2027-12-31", "prazoOn": false, "devolucao": "progressivo", "aviso": "Crédito preliminar, sujeito à validação da memória de cálculo (cl. 3.1.1).", "regra": "Crédito + 50%. Ordem por fração: comissão comprovada, crédito, resultado 50/50 (cl. 3.4). A venda não pode ter valor líquido de comissão menor que o crédito sem concordância do cliente (cl. 2.5).", "tseStatus": "CANCELADO", "tag": "RENEGOCIAÇÃO, CARTEIRA BMP, REVENDA"}, {"id": "A-203-0306", "idContrato": 307, "status": "conferido", "ativo": true, "fracao": "A203 · fração 1 · 13 semanas", "area": 67.0, "tabela": 1837000.0, "pago": 410996.11, "pagoObs": "", "credito": 463241.37, "creditoObs": "", "creditoNoTotal": true, "base": "2026-10-14", "modelo": "prazo", "devolveTxt": "Parcelada conforme recebe (ou outra forma por escrito)", "senaoVenderTxt": "LDP paga com recursos próprios até 30 dias após 31/12/2027", "ordem": ["cred"], "sobra": "ldp", "comDeduz": false, "prazo": "2027-12-31", "prazoOn": true, "devolucao": "progressivo", "regra": "Prazo fixo. Comissão de 6% paga pela LDP, sem desconto no crédito (cl. 5.1). Tudo o que entrar vai para o crédito; o excedente fica com a LDP (cl. 6.4). Se até 31/12/2027 o crédito não estiver quitado, a LDP paga o saldo em 30 dias com recursos próprios (cl. 6.6).", "tseStatus": "CANCELADO", "tag": "CESSÃO, RENEGOCIAÇÃO, CARTEIRA ATF, REVENDA"}, {"id": "A-105-0487", "idContrato": 492, "status": "conferido", "ativo": true, "fracao": "A105 · fração 4 · 13 semanas", "area": 123.0, "tabela": 2332000.0, "pago": 860289.15, "pagoObs": "aditamento usa 853.576,82", "credito": 959922.77, "creditoObs": "", "creditoNoTotal": true, "base": "2026-10-09", "modelo": "meio", "devolveTxt": "Parcelada, em até 30 dias de cada recebimento", "senaoVenderTxt": "Cláusulas 4.3 e 4.3.3 (prazo não conferido)", "ordem": ["cred", "com"], "sobra": "meio", "comDeduz": true, "comMax": 6, "prazo": "2027-12-31", "prazoOn": false, "devolucao": "progressivo", "aviso": "Cláusulas de prazo (3.10.2, 4.3 e 4.3.3) não foram conferidas.", "regra": "Crédito + 50%. Aqui o crédito vem antes da comissão: crédito, comissão (no máximo 6%), resultado 50/50 (cl. 3.4). Indicação do próprio cliente não paga comissão (cl. 2.9).", "tseStatus": "CANCELADO", "tag": "BLOQUEIO BOLETO, CARTEIRA BARU , REVENDA"}], "pontos": [{"nivel": "crit", "titulo": "Status CANCELADO no TSE", "texto": "Os contratos em revenda aparecem como cancelados, mas os aditamentos dizem que o contrato continua valendo até a devolução do crédito."}, {"nivel": "crit", "titulo": "Ninguém acompanha o saldo devido", "texto": "Não há controle único do crédito de cada cliente corrigido pelo IPCA. São mais de R$ 2,2 milhões a devolver sem acompanhamento."}, {"nivel": "", "titulo": "Um texto diferente por contrato", "texto": "Prazo, divisão de lucro, comissão e saída variam entre os aditamentos. Vale padronizar um modelo único."}, {"nivel": "", "titulo": "A-105-0487: diferença de R$ 6.712,33", "texto": "O TSE soma R$ 860.289,15 pagos e o aditamento usa R$ 853.576,82. Provavelmente juros e multa de atraso, que ficam fora do crédito."}, {"nivel": "", "titulo": "B-205-0159: diferença de R$ 340,99", "texto": "R$ 422.873,00 mais a parcela 46 (R$ 8.383,67) somam R$ 431.256,67. O TSE mostra R$ 430.915,68 pagos. O valor corrigido está só no Anexo I."}]}/*__FIM__*/;
+  var CONTRATOS = DADOS.contratos.filter(function (c) { return c.ativo !== false; }).map(function (c) {
+    if (c.credito == null) { c.credito = c.pago; c.base = c.base || DADOS.atualizado; c.aviso = "Revenda nova: o aditamento ainda não foi lido. O crédito mostrado é o valor pago no TSE, sem correção."; }
+    return c;
+  });
+
+  // ---------- parâmetros do simulador comercial (PV MAIOR) ----------
+  var TAXA_AA = 0.12, IGPM_AA = 0.0524, CHAVES = "2029-05-01";
+  var TAXA_AM = Math.pow(1 + TAXA_AA, 1 / 12) - 1;
+  var PER = { unica: 0, mensal: 1, bimestral: 2, semestral: 6, anual: 12 };
+  var PER_LBL = { unica: "Única / sinal", mensal: "Mensal", bimestral: "Bimestral", semestral: "Semestral", anual: "Anual" };
+
+  // ---------- util ----------
+  var $ = function (id) { return document.getElementById(id); };
+  var BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  var NUM = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var fmt = function (v) { return BRL.format(Math.round(v * 100) / 100); };
+  var parseNum = function (s) {
+    if (typeof s === "number") return s;
+    s = String(s || "").replace(/[R$\s]/g, "");
+    if (s.indexOf(",") >= 0) s = s.replace(/\./g, "").replace(",", ".");
+    var v = parseFloat(s); return isFinite(v) ? v : 0;
+  };
+  var D = function (iso) { var p = iso.split("-"); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] || 1)); };
+  var iso = function (d) { return d.toISOString().slice(0, 10); };
+  var addMonths = function (d, n) { var r = new Date(d.getTime()); var day = r.getUTCDate(); r.setUTCDate(1); r.setUTCMonth(r.getUTCMonth() + n); var last = new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + 1, 0)).getUTCDate(); r.setUTCDate(Math.min(day, last)); return r; };
+  var addDays = function (d, n) { return new Date(d.getTime() + n * 86400000); };
+  var monthDiff = function (a, b) { return (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + b.getUTCMonth() - a.getUTCMonth(); };
+  var dBR = function (d) { return d.toLocaleDateString("pt-BR", { timeZone: "UTC" }); };
+  var MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  var mesBR = function (d) { return MESES[d.getUTCMonth()] + "/" + d.getUTCFullYear(); };
+
+  // ---------- fluxo da proposta ----------
+  var rows = [];
+  function fluxoTabela(preco, dataVenda) {
+    var d0 = D(dataVenda);
+    return [
+      { n: 1, per: "unica", ini: iso(d0), valor: preco * 0.20 },
+      { n: 60, per: "mensal", ini: iso(addMonths(d0, 1)), valor: preco * 0.40 / 60 },
+      { n: 4, per: "anual", ini: iso(addMonths(d0, 12)), valor: preco * 0.40 / 4 }
+    ];
+  }
+  function round2(v) { return Math.round(v * 100) / 100; }
+
+  function parcelas(rs) {
+    // lista de {data, valor} com IGP-M pós-chaves (mesma regra do PV MAIOR)
+    var out = [], ref = D($("s-data").value), mCh = monthDiff(ref, D(CHAVES));
+    rs.forEach(function (r) {
+      var n = Math.max(0, Math.round(r.n)), v = r.valor; if (!n || !v || !r.ini) return;
+      var step = PER[r.per]; var d0 = D(r.ini);
+      for (var k = 0; k < n; k++) {
+        var d = addMonths(d0, step * k), m = monthDiff(ref, d);
+        var s = m >= mCh ? Math.floor((m - mCh) / 12) : 0;
+        out.push({ data: d, valor: v * Math.pow(1 + IGPM_AA, s), m: m });
+        if (step === 0) { /* única: só uma */ }
+      }
+    });
+    out.sort(function (a, b) { return a.data - b.data; });
+    return out;
+  }
+  function vp(ps) { return ps.reduce(function (s, p) { return s + p.valor / Math.pow(1 + TAXA_AM, Math.max(0, p.m)); }, 0); }
+
+  // ---------- render da tabela de linhas ----------
+  function renderRows() {
+    var tb = $("s-rows"); tb.innerHTML = "";
+    rows.forEach(function (r, i) {
+      var tr = document.createElement("tr");
+      var opts = Object.keys(PER).map(function (k) { return '<option value="' + k + '"' + (k === r.per ? " selected" : "") + ">" + PER_LBL[k] + "</option>"; }).join("");
+      tr.innerHTML =
+        '<td><input id="r-n-' + i + '" class="num" inputmode="numeric" value="' + r.n + '"></td>' +
+        '<td><select id="r-p-' + i + '">' + opts + "</select></td>" +
+        '<td><input id="r-d-' + i + '" type="date" value="' + r.ini + '"></td>' +
+        '<td><input id="r-v-' + i + '" class="num" inputmode="decimal" value="' + NUM.format(r.valor) + '"></td>' +
+        '<td class="tot">' + fmt(r.n * r.valor) + "</td>" +
+        '<td><button class="x" type="button" aria-label="Remover linha" data-del="' + i + '">×</button></td>';
+      tb.appendChild(tr);
+    });
+  }
+  $("s-rows").addEventListener("change", function (e) {
+    var m = e.target.id.match(/^r-([npdv])-(\d+)$/); if (!m) return;
+    var r = rows[+m[2]];
+    if (m[1] === "n") r.n = Math.max(0, Math.round(parseNum(e.target.value)));
+    if (m[1] === "p") { r.per = e.target.value; if (r.per === "unica") r.n = 1; }
+    if (m[1] === "d") r.ini = e.target.value;
+    if (m[1] === "v") r.valor = parseNum(e.target.value);
+    renderRows(); calc();
+  });
+  $("s-rows").addEventListener("click", function (e) {
+    var i = e.target.getAttribute("data-del"); if (i === null) return;
+    rows.splice(+i, 1); renderRows(); calc();
+  });
+  $("b-tabela").addEventListener("click", function () { rows = fluxoTabela(cur().tabela, $("s-data").value); renderRows(); calc(); });
+  $("b-vista").addEventListener("click", function () { rows = [{ n: 1, per: "unica", ini: $("s-data").value, valor: cur().tabela }]; renderRows(); calc(); });
+  $("b-add").addEventListener("click", function () { rows.push({ n: 1, per: "mensal", ini: $("s-data").value, valor: 0 }); renderRows(); });
+
+  // ---------- contrato selecionado ----------
+  var sel = $("s-contrato");
+  CONTRATOS.forEach(function (c, i) { var o = document.createElement("option"); o.value = i; o.textContent = c.id + " · " + (c.cliente || c.fracao); sel.appendChild(o); });
+  function cur() { return CONTRATOS[+sel.value]; }
+  function loadContrato() {
+    var c = cur();
+    $("s-credito").value = NUM.format(c.credito);
+    $("s-base").value = c.base;
+    $("s-prazo").value = c.prazo;
+    $("s-prazo-on").checked = c.prazoOn;
+    $("s-com").value = "6";
+    $("s-facts").innerHTML =
+      "<div><span>Fração</span><span>" + c.fracao + "</span></div>" +
+      "<div><span>Preço de tabela (TSE)</span><span class=num>" + fmt(c.tabela) + "</span></div>" +
+      "<div><span>Área privativa</span><span>" + c.area + " m²</span></div>";
+    $("s-rule").textContent = c.regra;
+    rows = fluxoTabela(c.tabela, $("s-data").value);
+    renderRows(); calc();
+  }
+  sel.addEventListener("change", loadContrato);
+  ["s-credito", "s-base", "s-ipca", "s-com", "s-prazo", "s-prazo-on"].forEach(function (id) { $(id).addEventListener("change", calc); });
+  $("s-data").addEventListener("change", function () { rows = fluxoTabela(cur().tabela, $("s-data").value); renderRows(); calc(); });
+
+  // ---------- cálculo da cascata do aditamento ----------
+  function calc() {
+    var c = cur();
+    var cred0 = parseNum($("s-credito").value), base = D($("s-base").value || c.base);
+    var ipca = parseNum($("s-ipca").value) / 100;
+    var comPct = parseNum($("s-com").value) / 100;
+    var prazo = D($("s-prazo").value || c.prazo), prazoOn = $("s-prazo-on").checked;
+    var ps = parcelas(rows);
+    var preco = rows.reduce(function (s, r) { return s + r.n * r.valor; }, 0);
+    var recebidoTotal = ps.reduce(function (s, p) { return s + p.valor; }, 0);
+    $("s-preco").textContent = fmt(preco);
+
+    var comTotal = preco * comPct, comRest = c.comDeduz ? comTotal : 0;
+    var saldo = cred0, tSaldo = base;
+    var accrue = function (d) { if (d > tSaldo && saldo > 0) { saldo *= Math.pow(1 + ipca, (d - tSaldo) / 864e5 / 365); } if (d > tSaldo) tSaldo = d; };
+    var tot = { com: 0, cred: 0, partCli: 0, ldp: 0, proprio: 0 }, quit = null, linhas = [], prazoUsado = false;
+
+    ps.forEach(function (p) {
+      var repasse = addDays(p.data, 30);
+      if (prazoOn && !prazoUsado && saldo > 0.005 && repasse > addDays(prazo, 30)) {
+        var dp = addDays(prazo, 30); accrue(dp);
+        tot.proprio += saldo; tot.cred += saldo;
+        linhas.push({ data: prazo, rec: 0, com: 0, rep: dp, cred: saldo, caixa: saldo, part: 0, ldp: -saldo, saldo: 0, proprio: true });
+        saldo = 0; quit = dp; prazoUsado = true;
+      }
+      var avail = p.valor, row = { data: p.data, rec: p.valor, com: 0, rep: repasse, cred: 0, part: 0, ldp: 0 };
+      c.ordem.forEach(function (step) {
+        if (step === "com" && comRest > 0 && avail > 0) { var x = Math.min(avail, comRest); comRest -= x; avail -= x; row.com += x; tot.com += x; }
+        if (step === "cred" && saldo > 0.005 && c.devolucao === "integral30") {
+          // cl. 3.3: crédito inteiro em até 30 dias do 1º pagamento, mesmo que a venda seja parcelada
+          accrue(repasse); var y1 = Math.min(avail, saldo), cx = saldo - y1;
+          row.cred += saldo; row.caixa = cx; tot.cred += saldo; tot.proprio += cx; avail -= y1; saldo = 0; quit = repasse;
+        } else if (step === "cred" && saldo > 0.005 && avail > 0) { accrue(repasse); var y = Math.min(avail, saldo); saldo -= y; avail -= y; row.cred += y; tot.cred += y; if (saldo <= 0.005 && !quit) quit = repasse; }
+      });
+      if (avail > 0) {
+        if (c.sobra === "meio" && saldo <= 0.005 && comRest <= 0.005) { row.part = avail / 2; row.ldp = avail / 2; }
+        else { row.ldp = avail; }
+        tot.partCli += row.part; tot.ldp += row.ldp;
+      }
+      if (saldo > 0.005) accrue(repasse);
+      row.saldo = saldo;
+      linhas.push(row);
+    });
+    // prazo depois do último recebimento
+    if (prazoOn && !prazoUsado && saldo > 0.005) {
+      var dp2 = addDays(prazo, 30); accrue(dp2);
+      tot.proprio += saldo; tot.cred += saldo;
+      linhas.push({ data: prazo, rec: 0, com: 0, rep: dp2, cred: saldo, caixa: saldo, part: 0, ldp: -saldo, saldo: 0, proprio: true });
+      saldo = 0; quit = dp2;
+    }
+
+    var clienteTotal = tot.cred + tot.partCli;
+    var comLDP = c.comDeduz ? 0 : comTotal; // A-203: comissão paga pela LDP fora da cascata
+    var ldpLiq = recebidoTotal - tot.com - (tot.cred - tot.proprio) - tot.partCli - tot.proprio - comLDP;
+
+    // V.P. (regra do PV MAIOR)
+    var vpProp = vp(ps), vpTab = vp(parcelas(fluxoTabela(c.tabela, $("s-data").value)));
+    var dif = vpTab ? vpProp / vpTab - 1 : 0;
+
+    $("k-cliente").textContent = fmt(clienteTotal);
+    $("k-quit").textContent = saldo > 0.005 ? "não quita" : (quit ? mesBR(quit) : "–");
+    $("k-ldp").textContent = fmt(ldpLiq);
+    $("k-vp").textContent = (dif >= 0 ? "+" : "") + NUM.format(dif * 100) + "%";
+
+    // alertas
+    var al = [];
+    if (c.aviso) al.push(["", c.aviso]);
+    var credNaVenda = cred0 * Math.pow(1 + ipca, Math.max(0, (D($("s-data").value) - base) / 864e5 / 365));
+    if (c.comDeduz && preco - comTotal < credNaVenda - 0.5) al.push(["crit", "Preço menos comissão (" + fmt(preco - comTotal) + ") fica abaixo do crédito atualizado na data da venda (" + fmt(credNaVenda) + "). Pelo aditamento, a venda precisa de aceite do cliente ou a LDP completa a diferença."]);
+    if (!c.comDeduz && preco < credNaVenda - 0.5) al.push(["crit", "Preço abaixo do crédito atualizado (" + fmt(credNaVenda) + "): depende de anuência do cliente (cl. 3.3)."]);
+    if (c.comMax && comPct * 100 > c.comMax + 1e-9) al.push(["crit", "Comissão acima do limite de " + c.comMax + "% do aditamento (cl. 2.3)."]);
+    if (!prazoOn && D($("s-data").value) > prazo) al.push(["crit", "Venda depois do prazo-limite: pelo aditamento vale o distrato (ou a opção do cliente), e não a revenda."]);
+    if (saldo > 0.005) al.push(["crit", "O fluxo não quita o crédito: faltam " + fmt(saldo) + " no último repasse."]);
+    if (tot.proprio > 0 && c.devolucao !== "integral30") al.push(["", "No prazo-limite a LDP paga " + fmt(tot.proprio) + " com recursos próprios, porque o comprador ainda não pagou o suficiente."]);
+
+    // ---------- quadro "Como é a devolução" ----------
+    var reps = linhas.filter(function (l) { return l.cred > 0.005 || l.part > 0.005; });
+    var repsCred = linhas.filter(function (l) { return l.cred > 0.005; });
+    var ultPart = linhas.filter(function (l) { return l.part > 0.005; }).pop();
+    var chip = $("s-devol-chip"), txt, cl, cards;
+    if (c.devolucao === "integral30") {
+      var r0 = repsCred[0];
+      chip.className = "chip c"; chip.textContent = "Pagamento único em 30 dias";
+      txt = r0 ? "O cliente recebe o crédito inteiro de uma vez, até " + dBR(r0.rep) + " (30 dias depois do primeiro pagamento do comprador). " +
+        (r0.caixa > 0.005 ? "O primeiro pagamento só cobre " + fmt(r0.cred - r0.caixa) + "; a LDP completa " + fmt(r0.caixa) + " com caixa próprio e se reembolsa com as parcelas seguintes do comprador." : "O primeiro pagamento do comprador já cobre o crédito inteiro.")
+        : "Sem recebimentos na proposta.";
+      cl = "Cl. 3.3: a restituição integral ocorre em até 30 dias do primeiro pagamento e \"não fica limitada ao preço ou às parcelas recebidas do novo adquirente\". Atraso: IPCA + 1% a.m. + multa de 2% (cl. 3.5).";
+      cards = [["Valor pago ao cliente", fmt(tot.cred)], ["Data do pagamento", r0 ? dBR(r0.rep) : "–"], ["Sai da venda", fmt(tot.cred - tot.proprio)], ["Sai do caixa da LDP", fmt(tot.proprio)]];
+    } else {
+      var temPrazo = prazoOn;
+      chip.className = "chip " + (c.sobra === "meio" ? "b" : "d");
+      chip.textContent = temPrazo ? "Parcelado, com data-limite" : "Parcelado, conforme o comprador paga";
+      txt = repsCred.length
+        ? "O cliente recebe em " + repsCred.length + " repasse" + (repsCred.length > 1 ? "s" : "") + " de crédito, de " + dBR(repsCred[0].rep) + " a " + dBR(repsCred[repsCred.length - 1].rep) + ", cada um até 30 dias depois do pagamento do comprador. A LDP não precisa antecipar parcelas que ainda não recebeu." +
+          (c.sobra === "meio" ? (ultPart ? " Depois de quitado o crédito, o cliente continua recebendo 50% do que sobrar de cada parcela, até " + dBR(ultPart.rep) + "." : " Com esse preço não sobra resultado para dividir.") : "") +
+          (tot.proprio > 0.005 ? " No prazo-limite faltavam " + fmt(tot.proprio) + ", pagos pela LDP com caixa próprio." : "")
+        : "Sem repasses na proposta.";
+      cl = c.id === "A-203-0306"
+        ? "Cl. 6.2: o crédito é pago à medida que a LDP recebe, \"salvo se as Partes ajustarem por escrito forma diversa\". Cl. 6.6: o saldo em aberto em 31/12/2027 é pago pela LDP em 30 dias."
+        : "Cl. 3.5 e 3.5.1: repasse em até 30 dias de cada recebimento; venda parcelada gera devolução progressiva, sem obrigação de antecipar parcelas não recebidas. Não é permitido reter o valor até o prazo-limite.";
+      cards = [["Total ao cliente", fmt(clienteTotal)], ["Repasses ao cliente", String(reps.length)], ["Primeiro / último", reps.length ? mesBR(reps[0].rep) + " → " + mesBR(reps[reps.length - 1].rep) : "–"], ["Do caixa da LDP", fmt(tot.proprio)]];
+    }
+    $("s-devol-txt").textContent = txt;
+    $("s-devol-cl").textContent = cl;
+    $("s-devol-grid").innerHTML = cards.map(function (k) { return '<div><span class="l">' + k[0] + '</span><span class="v">' + k[1] + "</span></div>"; }).join("");
+    if (!c.comDeduz) al.push(["", "Comissão de " + fmt(comTotal) + " paga pela LDP fora da cascata (já descontada do líquido da LDP)."]);
+    if (saldo <= 0.005 && !al.some(function (a) { return a[0] === "crit"; })) al.push(["ok", "A proposta quita o crédito do cliente" + (quit ? " em " + mesBR(quit) : "") + "."]);
+    $("s-alerts").innerHTML = al.map(function (a) { return '<div class="alert ' + a[0] + '">' + a[1] + "</div>"; }).join("");
+
+    // barra de destino
+    var partes = [
+      ["Comissão", tot.com + comLDP, "var(--stone)"],
+      ["Crédito ao cliente", tot.cred - tot.proprio, "var(--accent)"],
+      ["Participação do cliente", tot.partCli, "var(--ok)"],
+      ["LDP", Math.max(0, recebidoTotal - tot.com - (tot.cred - tot.proprio) - tot.partCli - comLDP), "var(--muted)"]
+    ];
+    var soma = partes.reduce(function (s, p) { return s + p[1]; }, 0) || 1;
+    $("s-bar").innerHTML = partes.map(function (p) { return '<span style="width:' + (p[1] / soma * 100) + "%;background:" + p[2] + '" title="' + p[0] + '"></span>'; }).join("");
+    $("s-legend").innerHTML = partes.map(function (p) { return '<span><i style="background:' + p[2] + '"></i>' + p[0] + " · " + fmt(p[1]) + "</span>"; }).join("");
+    $("s-detail").innerHTML =
+      "<div><span>Recebido do novo comprador (com IGP-M pós-chaves)</span><span class=num>" + fmt(recebidoTotal) + "</span></div>" +
+      "<div><span>Crédito na data da venda (IPCA)</span><span class=num>" + fmt(credNaVenda) + "</span></div>" +
+      "<div><span>Resultado positivo (preço − comissão − crédito)</span><span class=num>" + fmt(Math.max(0, recebidoTotal - comTotal - tot.cred)) + "</span></div>" +
+      (tot.proprio ? "<div><span>Pago pela LDP com recursos próprios</span><span class=num>" + fmt(tot.proprio) + "</span></div>" : "") +
+      "<div><span>V.P. da proposta / da tabela</span><span class=num>" + fmt(vpProp) + " / " + fmt(vpTab) + "</span></div>";
+
+    // cronograma (agrupa por mês para não virar 60+ linhas idênticas)
+    var tb = $("s-cron"); tb.innerHTML = "";
+    linhas.forEach(function (l) {
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + (l.proprio ? "<b>Prazo-limite</b> " : "") + dBR(l.data) + "</td>" +
+        '<td class="r num">' + (l.rec ? fmt(l.rec) : "–") + "</td>" +
+        '<td class="r num">' + (l.com ? fmt(l.com) : "–") + "</td>" +
+        "<td class=num>" + dBR(l.rep) + "</td>" +
+        '<td class="r num">' + (l.cred ? fmt(l.cred) : "–") + (l.caixa > 0.005 ? '<span class="sub">' + fmt(l.caixa) + " do caixa da LDP</span>" : "") + "</td>" +
+        '<td class="r num">' + (l.part ? fmt(l.part) : "–") + "</td>" +
+        '<td class="r num">' + (l.ldp > 0 ? fmt(l.ldp) : "–") + "</td>" +
+        '<td class="r num">' + fmt(l.saldo) + "</td>";
+      tb.appendChild(tr);
+    });
+  }
+
+
+  // ---------- levantamento (montado a partir dos dados) ----------
+  function renderLevantamento() {
+    var esc = function (t) { return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
+    var n2 = function (v) { return NUM.format(v); };
+    var mi = function (v) { return "R$ " + (v / 1e6).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " mi"; };
+    var dataBR = function (s) { return s ? s.split("-").reverse().join("/") : "–"; };
+    var CHIP = { credito: ["a", "Só crédito"], meio: ["b", "Crédito + 50%"], prazo: ["d", "Prazo fixo"] };
+    var temNome = CONTRATOS.some(function (c) { return c.cliente; });
+    $("lev-col-cli").textContent = temNome ? "Cliente" : "Fração";
+    if (DADOS.atualizado) $("lev-data").textContent = "Atualizado em " + dataBR(DADOS.atualizado);
+    var novos = DADOS.contratos.filter(function (c) { return c.ativo !== false && c.status === "novo"; });
+    var pago = 0, cred = 0, nCred = 0, fora = [];
+    var body = CONTRATOS.map(function (c) {
+      pago += c.pago || 0;
+      var lido = c.status !== "novo";
+      if (lido && c.creditoNoTotal !== false) { cred += c.credito; nCred++; } else fora.push(c.id);
+      var ch = CHIP[c.modelo] || ["", "A conferir"];
+      return "<tr>" +
+        '<td class="ct">' + esc(c.id) + (c.status === "novo" ? '<span class="sub">nova</span>' : "") + "</td>" +
+        "<td>" + esc(temNome ? c.cliente : c.fracao) + "</td>" +
+        '<td class="r num">' + n2(c.pago || 0) + (c.pagoObs ? '<span class="sub">' + esc(c.pagoObs) + "</span>" : "") + "</td>" +
+        '<td class="r num">' + (lido ? n2(c.credito) + (c.creditoObs ? '<span class="sub">' + esc(c.creditoObs) + "</span>" : "") : "a conferir") + "</td>" +
+        '<td class="num">' + (lido ? dataBR(c.base) : "–") + "</td>" +
+        '<td><span class="chip ' + ch[0] + '">' + ch[1] + "</span></td>" +
+        "<td>" + (c.devolveTxt || "Aditamento a conferir") + "</td>" +
+        "<td>" + esc(c.senaoVenderTxt || "–") + "</td></tr>";
+    }).join("");
+    $("lev-body").innerHTML = body;
+    $("lev-foot").innerHTML = '<tr><td colspan="2">Total</td><td class="r num">' + n2(pago) + '</td><td class="r num">' + n2(cred) +
+      (fora.length ? '<span class="sub">' + nCred + " contratos, sem " + fora.join(", ") + "</span>" : "") + '</td><td colspan="4"></td></tr>';
+    $("lev-figs").innerHTML =
+      '<div class="fig"><span class="v">' + CONTRATOS.length + '</span><span class="l">contratos com TAG REVENDA ("devolução de valor somente após a nova venda")' + (novos.length ? ", " + novos.length + " nova" + (novos.length > 1 ? "s" : "") + " com aditamento a conferir" : "") + "</span></div>" +
+      '<div class="fig"><span class="v num">' + mi(pago) + '</span><span class="l">pagos pelos clientes, somando as parcelas baixadas no TSE</span></div>' +
+      '<div class="fig"><span class="v num">' + mi(cred) + '</span><span class="l">de crédito a devolver em ' + nCred + " contratos" + (fora.length ? ", fora " + fora.join(", ") : "") + "</span></div>";
+    document.querySelectorAll(".who[data-modelo]").forEach(function (el) {
+      el.textContent = CONTRATOS.filter(function (c) { return c.modelo === el.getAttribute("data-modelo"); }).map(function (c) { return c.id; }).join(" · ") || "Nenhum contrato hoje";
+    });
+    $("lev-pontos").innerHTML = (novos.length ? '<div class="issue crit"><div><h3>' + novos.length + " revenda" + (novos.length > 1 ? "s novas" : " nova") + " sem aditamento lido</h3><p>" + novos.map(function (c) { return esc(c.id); }).join(", ") + ": apareceram no TSE com a TAG REVENDA. Crédito e regra de devolução ainda não foram lidos no DocuSign.</p></div></div>" : "") +
+      (DADOS.pontos || []).map(function (p) { return '<div class="issue ' + esc(p.nivel) + '"><div><h3>' + esc(p.titulo) + "</h3><p>" + esc(p.texto) + "</p></div></div>"; }).join("");
+  }
+
+  // ---------- abas ----------
+  document.querySelectorAll(".tabs a").forEach(function (a) {
+    a.addEventListener("click", function () { show(a.getAttribute("data-view")); });
+  });
+  function show(forced) {
+    var h = location.hash.slice(1);
+    var v = typeof forced === "string" ? forced : (h === "simulador" || h === "guia" ? h : "levantamento");
+    $("view-simulador").hidden = v !== "simulador";
+    $("view-guia").hidden = v !== "guia";
+    $("view-levantamento").hidden = v !== "levantamento";
+    document.querySelectorAll(".tabs a").forEach(function (a) { if (a.getAttribute("data-view") === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  }
+  window.addEventListener("hashchange", show);
+
+  // ---------- início ----------
+  renderLevantamento();
+  $("s-data").value = "2026-12-01";
+  sel.value = "0";
+  loadContrato();
+  show();
+  window.__revenda = { calc: calc, CONTRATOS: CONTRATOS, vp: vp, parcelas: parcelas, fluxoTabela: fluxoTabela };
+})();
+</script>
