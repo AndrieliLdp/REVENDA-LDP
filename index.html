@@ -754,8 +754,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
         "<td>" + esc(c.senaoVenderTxt || "–") + "</td></tr>";
     }).join("");
     $("lev-body").innerHTML = body;
-    $("lev-foot").innerHTML = '<tr><td colspan="2">Total</td><td class="r num">' + n2(neg) + '</td><td class="r num">' + n2(sug) + '</td><td class="r num">' + n2(cred) +
-      (fora.length ? '<span class="sub">' + nCred + " contratos, sem " + fora.join(", ") + "</span>" : "") + '</td><td colspan="4"></td></tr>';
+    $("lev-foot").innerHTML = '<tr><td colspan="2">Total</td><td class="r num">' + n2(neg) + '</td><td class="r num">' + n2(sug) + '</td><td></td><td colspan="4"></td></tr>';
     $("lev-figs").innerHTML =
       '<div class="fig"><span class="v">' + CONTRATOS.length + '</span><span class="l">contratos com TAG REVENDA ("devolução de valor somente após a nova venda")' + (novos.length ? ", " + novos.length + " nova" + (novos.length > 1 ? "s" : "") + " com aditamento a conferir" : "") + "</span></div>" +
       '<div class="fig"><span class="v num">' + mi(pago) + '</span><span class="l">pagos pelos clientes, somando as parcelas baixadas no TSE</span></div>' +
