@@ -286,7 +286,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
           <h3>Proposta do novo comprador</h3>
           <div class="btns">
             <button class="btn" type="button" id="b-tabela">Fluxo da tabela</button>
-            <button class="btn" type="button" id="b-vista">À vista</button>
+            <button class="btn" type="button" id="b-sug">Valor sugerido</button>
+            <button class="btn" type="button" id="b-vista">À vista (−15%)</button>
             <button class="btn ghost" type="button" id="b-add">+ Linha</button>
           </div>
         </div>
@@ -552,7 +553,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     rows.splice(+i, 1); renderRows(); calc();
   });
   $("b-tabela").addEventListener("click", function () { rows = fluxoTabela(cur().tabela, $("s-data").value); renderRows(); calc(); });
-  $("b-vista").addEventListener("click", function () { rows = [{ n: 1, per: "unica", ini: $("s-data").value, valor: cur().tabela }]; renderRows(); calc(); });
+  var DESC_VISTA = 0.15;
+  function sugerido(c) { return (c.negociado || 0) * (1 + (DADOS.sugeridoPct || 36) / 100); }
+  $("b-vista").addEventListener("click", function () { rows = [{ n: 1, per: "unica", ini: $("s-data").value, valor: cur().tabela * (1 - DESC_VISTA) }]; renderRows(); calc(); });
+  $("b-sug").addEventListener("click", function () { var v = sugerido(cur()); if (!v) return; rows = fluxoTabela(v, $("s-data").value); renderRows(); calc(); });
   $("b-add").addEventListener("click", function () { rows.push({ n: 1, per: "mensal", ini: $("s-data").value, valor: 0 }); renderRows(); });
 
   // ---------- contrato selecionado ----------
@@ -569,6 +573,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     $("s-facts").innerHTML =
       "<div><span>Fração</span><span>" + c.fracao + "</span></div>" +
       "<div><span>Preço de tabela (TSE)</span><span class=num>" + fmt(c.tabela) + "</span></div>" +
+      (c.negociado ? "<div><span>Valor sugerido (negociado +" + (DADOS.sugeridoPct || 36) + "%)</span><span class=num>" + fmt(sugerido(c)) + "</span></div>" : "") +
       "<div><span>Área privativa</span><span>" + c.area + " m²</span></div>";
     $("s-rule").textContent = c.regra;
     rows = fluxoTabela(c.tabela, $("s-data").value);
